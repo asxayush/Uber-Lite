@@ -5,6 +5,10 @@ dotenv.config()
 import express from "express";
 import cors from "cors"
 
+import healthCheckRouter from "./routes/healthcheck.routes.js";
+
+app.use("/api/v1/healthcheck", healthCheckRouter);
+
 const app = express()
 app.use(cors())
 
