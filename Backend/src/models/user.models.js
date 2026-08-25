@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+import crypto from 'node:crypto'
 
 const userSchema = new mongoose.Schema({
     fullName: {
@@ -81,6 +82,8 @@ userSchema.methods.generateAccessToken = function () {
         }
     )
 }
+
+
 userSchema.methods.generateRefreshToken = function () {
   return  jwt.sign(
         {
@@ -92,6 +95,20 @@ userSchema.methods.generateRefreshToken = function () {
             expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
     )
+}
+
+userSchema.methods.generateTemporaryToken = function () {
+    const unHashedToken = crypto.randomBytes(20).toString("hex")
+
+    const hashedToken = crypto
+    .createHash("sha256")
+    .update(unHashedToken)
+    .digest("hex")
+    
+
+    const tokenExpiry = Date.now() + (20*60*1000) // 20 mins
+
+    return {unHashedToken, hashedToken, tokenExpiry}
 }
 
 
