@@ -3,59 +3,52 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import crypto from 'node:crypto'
 
-const userSchema = new mongoose.Schema({
-    fullName: {
-        firstName: {
-            type: String,
-            required: true,
-            minlength: [3, 'First name should be at least of 3 characters']
-        },
-        lastName: {
-            type: String,
-            required: true,
-            minlength: [3, 'Last name should be at least of 3 characters']
-        },
-    },
-    password: {
+
+
+const userSchema = new mongoose.Schema(
+  {
+    name:{
         type: String,
-        required: [true, 'Password is required'],
-        select: false,
+        required: [true, "Name is required"]
+
     },
-    email: {
+    email:{
         type: String,
-        required: [true, 'Email is required'],
+        required: [true, "Email is required"],
         unique: true,
-        minlength: [5, 'email must be at least 5 characters long']
+        lowercase: true
     },
-
-    socketId: {
-        type: String,
+    phone:{
+        type: Number,
+        optional: true,
+        unique: [true, "Phone number already exists"]
     },
-
     isEmailVerified: {
             type: Boolean,
             default: false,
         },
-    refreshToken: {
+        refreshToken: {
             type: String,
         },
-    forgotPasswordToken: {
+        forgotPasswordToken: {
             type: String,
         },
-    forgotPasswordExpiry: {
+        forgotPasswordExpiry: {
             type: Date,
         },
-    emailVerificationToken: {
+        emailVerificationToken: {
             type: String,
         },
-    emailVerificationExpiry: {
+        emailVerificationExpiry: {
             type: Date,
         },
-    
-},
-    {timestamps: true}
-)  
 
+  },
+  { timestamps: true }
+);
+
+
+// Pre-save hook to hash the password before saving the user document
 userSchema.pre("save", async function(next) {
     if(!this.isModified("password")) return next()
 
@@ -63,12 +56,13 @@ userSchema.pre("save", async function(next) {
     next()
 } )
 
-
+// Method to compare the provided password with the hashed password in the database
 userSchema.methods.comparePassword = async function(password)  {
     
     return await bcrypt.compare(password, this.password)
 }
 
+// Method to generate an access token for the user
 userSchema.methods.generateAccessToken = function () {
     return  jwt.sign(
         {
@@ -83,7 +77,7 @@ userSchema.methods.generateAccessToken = function () {
     )
 }
 
-
+// Method to generate a refresh token for the user
 userSchema.methods.generateRefreshToken = function () {
   return  jwt.sign(
         {
@@ -97,6 +91,7 @@ userSchema.methods.generateRefreshToken = function () {
     )
 }
 
+// Method to generate a temporary token for password reset or email verification
 userSchema.methods.generateTemporaryToken = function () {
     const unHashedToken = crypto.randomBytes(20).toString("hex")
 
